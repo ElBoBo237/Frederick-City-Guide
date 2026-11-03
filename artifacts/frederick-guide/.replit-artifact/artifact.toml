@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Frederick, Maryland"
+description = "A friendly, mobile-first guide to Frederick, Maryland, featuring local food, quick facts, the state leader and bird, and a visitor’s personal favorites."
+version = "1.0.0"
+id = "artifacts/frederick-guide"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24570
+
+[services.development]
+run = "pnpm --filter @workspace/frederick-guide run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/frederick-guide", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/frederick-guide/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24570"
+BASE_PATH = "/"
