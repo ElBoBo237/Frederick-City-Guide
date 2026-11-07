@@ -27,6 +27,7 @@
           <a href="#leader-title">Leader</a>
           <a href="#bird-title">State bird</a>
           <a href="#likes-title">Things I like</a>
+          <a href="#prompt-lab-title">Prompt Lab</a>
         </nav>
       </header>
 
@@ -143,6 +144,48 @@
               <p class="empty-likes" id="empty-likes">Your list is ready when you are.</p>
               <ul class="like-list" id="like-list" aria-live="polite"></ul>
             </div>
+          </div>
+        </section>
+
+        <section class="section" aria-labelledby="prompt-lab-title">
+          <div class="section-heading">
+            <p class="section-kicker">06 / Ask a local</p>
+            <h2 id="prompt-lab-title">Prompt Lab</h2>
+          </div>
+          <div class="section-body prompt-lab">
+            <p class="prompt-intro">Ask about Frederick and tune how the city guide answers. Your conversation stays in this page only.</p>
+
+            <div class="prompt-controls" aria-label="Answer settings">
+              <div class="prompt-setting">
+                <label for="temperature">Temperature <output id="temperature-value">1.0</output></label>
+                <input id="temperature" type="range" min="0" max="2" step="0.1" value="1">
+                <small>Lower values make answers more consistent.</small>
+              </div>
+              <div class="prompt-setting">
+                <label for="top-p">Top-p <output id="top-p-value">0.95</output></label>
+                <input id="top-p" type="range" min="0" max="1" step="0.01" value="0.95">
+                <small>Controls how many word choices are considered.</small>
+              </div>
+              <div class="prompt-setting">
+                <label for="max-tokens">Max answer tokens <output id="max-tokens-value">300</output></label>
+                <input id="max-tokens" type="range" min="32" max="1024" step="1" value="300">
+                <small>The answer may stop at this limit.</small>
+              </div>
+            </div>
+
+            <details class="system-prompt-details">
+              <summary>Show the city guide’s system prompt</summary>
+              <pre id="system-prompt-output">Loading the system prompt…</pre>
+            </details>
+
+            <ol class="chat-messages" id="chat-messages" aria-label="Conversation" aria-live="polite" aria-relevant="additions"></ol>
+
+            <form class="chat-form" id="chat-form">
+              <label for="chat-input">Ask the Frederick city guide</label>
+              <textarea id="chat-input" name="message" rows="2" maxlength="4000" placeholder="What should I eat first?" required></textarea>
+              <button id="chat-submit" type="submit">Ask the guide</button>
+            </form>
+            <p class="chat-status" id="chat-status" role="status" aria-live="polite"></p>
           </div>
         </section>
       </main>

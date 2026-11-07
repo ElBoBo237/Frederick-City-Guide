@@ -1,0 +1,1 @@
+- [Gemini chat model behavior](gemini-chat-models.md) — 3.8 thinking consumed short answer budgets; verify latency and visible output when changing defaults.

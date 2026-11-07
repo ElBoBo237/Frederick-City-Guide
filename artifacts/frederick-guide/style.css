@@ -623,14 +623,13 @@ body { background: #fff; }
   }
   .section-nav {
     width: calc(100% + 40px);
+    flex-wrap: wrap;
     justify-content: flex-start;
-    gap: 21px;
+    gap: 12px 21px;
     margin: 0 -20px;
-    overflow-x: auto;
+    overflow: visible;
     padding: 12px 20px 14px;
-    scrollbar-width: none;
   }
-  .section-nav::-webkit-scrollbar { display: none; }
   .hero { padding: 66px 0 56px; }
   .hero h1 { font-size: clamp(55px, 12vw, 78px); }
   .hero-aside { justify-self: center; }
@@ -650,4 +649,179 @@ body { background: #fff; }
   .hero-intro { font-size: 14px; }
   .hero-actions { gap: 8px; margin-top: 21px; }
   .hero-actions a { min-height: 38px; padding: 0 12px; font-size: 11px; }
+}
+
+/* Prompt Lab keeps the controls and conversation easy to scan. */
+.prompt-lab {
+  display: grid;
+  gap: 20px;
+}
+.prompt-intro {
+  max-width: 620px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.7;
+}
+.prompt-controls {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #f6faf7;
+}
+.prompt-setting {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+}
+.prompt-setting label {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--green-deep);
+  font-size: 12px;
+  font-weight: 700;
+}
+.prompt-setting output {
+  color: var(--green);
+  font-variant-numeric: tabular-nums;
+}
+.prompt-setting input {
+  width: 100%;
+  accent-color: var(--green);
+}
+.prompt-setting small {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+.system-prompt-details {
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--surface);
+}
+.system-prompt-details summary {
+  padding: 13px 16px;
+  color: var(--green-deep);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+}
+.system-prompt-details pre {
+  max-height: 320px;
+  overflow: auto;
+  margin: 0;
+  padding: 0 16px 16px;
+  color: var(--muted);
+  font: 12px/1.65 var(--sans);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.chat-messages {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 480px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.chat-messages:empty { display: none; }
+.chat-message {
+  width: fit-content;
+  max-width: min(88%, 680px);
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #f6faf7;
+  animation: appear .2s ease-out both;
+}
+.chat-message-user {
+  align-self: flex-end;
+  border-color: var(--green);
+  background: var(--green);
+  color: #fff;
+}
+.chat-message-text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.chat-message-meta {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.5;
+}
+.chat-message-user .chat-message-meta { color: #d7e9de; }
+.chat-message-error {
+  border-left: 3px solid var(--orange);
+  background: #fff9f5;
+}
+.chat-cutoff-note {
+  margin: 9px 0 0;
+  color: #8a4b2e;
+  font-size: 11px;
+  font-weight: 700;
+}
+.chat-form {
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+}
+.chat-form label {
+  color: var(--green-deep);
+  font-size: 12px;
+  font-weight: 700;
+}
+.chat-form textarea {
+  width: 100%;
+  min-height: 64px;
+  resize: vertical;
+  padding: 13px 15px;
+  border: 1px solid #bdcec3;
+  border-radius: 3px;
+  background: #fbfdfb;
+  color: var(--ink);
+  font: 14px/1.5 var(--sans);
+}
+.chat-form textarea:focus-visible {
+  outline: 3px solid rgba(23,99,68,.2);
+  border-color: var(--green);
+}
+.chat-form button {
+  min-height: 42px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 3px;
+  background: var(--green);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  transition: background .18s ease, opacity .18s ease;
+}
+.chat-form button:hover:not(:disabled) { background: var(--green-deep); }
+.chat-form button:disabled {
+  cursor: wait;
+  opacity: .65;
+}
+.chat-status {
+  min-height: 1em;
+  margin: -10px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+@media (max-width: 760px) {
+  .prompt-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 440px) {
+  .prompt-controls { grid-template-columns: 1fr; padding: 17px; }
+  .chat-message { max-width: 96%; }
+  .system-prompt-details pre { font-size: 11px; }
 }

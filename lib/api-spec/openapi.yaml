@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: chat
+    description: AI city guide chat
 paths:
   /healthz:
     get:
@@ -24,6 +26,54 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /chat/system-prompt:
+    get:
+      operationId: getCityChatSystemPrompt
+      tags: [chat]
+      summary: Get the city guide system prompt
+      responses:
+        "200":
+          description: The system prompt used by the city guide
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SystemPromptResponse"
+  /chat:
+    post:
+      operationId: sendCityChatMessage
+      tags: [chat]
+      summary: Ask the AI city guide a question
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CityChatInput"
+      responses:
+        "200":
+          description: The city guide's answer and usage information
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CityChatResponse"
+        "400":
+          description: The request message or settings are invalid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "502":
+          description: The AI provider could not complete the request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "503":
+          description: The Gemini API key is not configured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +83,110 @@ components:
           type: string
       required:
         - status
+    SystemPromptResponse:
+      type: object
+      properties:
+        systemPrompt:
+          type: string
+      required:
+        - systemPrompt
+    ChatSettingsInput:
+      type: object
+      properties:
+        temperature:
+          type: number
+          minimum: 0
+          maximum: 2
+        topP:
+          type: number
+          minimum: 0
+          maximum: 1
+        maxOutputTokens:
+          type: integer
+          minimum: 32
+          maximum: 1024
+    ChatSettings:
+      type: object
+      properties:
+        temperature:
+          type: number
+        topP:
+          type: number
+        maxOutputTokens:
+          type: integer
+      required:
+        - temperature
+        - topP
+        - maxOutputTokens
+    ChatHistoryMessage:
+      type: object
+      properties:
+        role:
+          type: string
+          enum: [user, assistant]
+        content:
+          type: string
+          minLength: 1
+          maxLength: 4000
+      required:
+        - role
+        - content
+    CityChatInput:
+      type: object
+      properties:
+        message:
+          type: string
+          minLength: 1
+          maxLength: 4000
+        history:
+          type: array
+          maxItems: 16
+          items:
+            $ref: "#/components/schemas/ChatHistoryMessage"
+        settings:
+          $ref: "#/components/schemas/ChatSettingsInput"
+      required:
+        - message
+    CityChatUsage:
+      type: object
+      properties:
+        promptTokens:
+          type: integer
+          minimum: 0
+        outputTokens:
+          type: integer
+          minimum: 0
+        totalTokens:
+          type: integer
+          minimum: 0
+        finishReason:
+          type: ["string", "null"]
+      required:
+        - promptTokens
+        - outputTokens
+        - totalTokens
+        - finishReason
+    CityChatResponse:
+      type: object
+      properties:
+        reply:
+          type: string
+        usage:
+          $ref: "#/components/schemas/CityChatUsage"
+        settings:
+          $ref: "#/components/schemas/ChatSettings"
+        model:
+          type: string
+      required:
+        - reply
+        - usage
+        - settings
+        - model
+    ApiError:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
 
