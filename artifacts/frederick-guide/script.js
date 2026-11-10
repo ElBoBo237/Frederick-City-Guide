@@ -4,6 +4,175 @@ const likeInput = document.querySelector("#like-input");
 const likeList = document.querySelector("#like-list");
 const emptyLikes = document.querySelector("#empty-likes");
 
+const dishUploadForm = document.querySelector("#dish-upload-form");
+const dishTitleInput = document.querySelector("#dish-title");
+const dishCaptionInput = document.querySelector("#dish-caption");
+const dishImageInput = document.querySelector("#dish-image");
+const dishUploadSubmit = document.querySelector("#dish-upload-submit");
+const dishUploadStatus = document.querySelector("#dish-upload-status");
+const dishGalleryGrid = document.querySelector("#dish-gallery-grid");
+const dishGalleryEmpty = document.querySelector("#dish-gallery-empty");
+const maxDishImageBytes = 3 * 1024 * 1024;
+const allowedDishImageTypes = ["image/jpeg", "image/png", "image/webp"];
+let dishGalleryRequest = 0;
+
+function canvasToBlob(canvas, mimeType, quality) {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (blob) resolve(blob);
+      else reject(new Error("This browser could not prepare the photo for upload."));
+    }, mimeType, quality);
+  });
+}
+
+async function resizeDishImage(file) {
+  if (!allowedDishImageTypes.includes(file.type)) {
+    throw new Error("Choose a JPEG, PNG, or WebP photo. GIFs are not supported.");
+  }
+  if (file.size > maxDishImageBytes) {
+    throw new Error("Photos must be 3 MB or smaller. Please choose a smaller file.");
+  }
+
+  let bitmap;
+  try {
+    bitmap = await createImageBitmap(file);
+  } catch {
+    throw new Error("We couldn't read that photo. Try a JPEG, PNG, or WebP image.");
+  }
+
+  try {
+    const scale = Math.min(1, 1280 / Math.max(bitmap.width, bitmap.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+    canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("This browser could not prepare the photo for upload.");
+    context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+
+    let blob = await canvasToBlob(canvas, file.type, 0.86);
+    if (blob.size > maxDishImageBytes) {
+      for (const quality of [0.78, 0.65, 0.52, 0.4]) {
+        blob = await canvasToBlob(canvas, "image/jpeg", quality);
+        if (blob.size <= maxDishImageBytes) break;
+      }
+    }
+    if (blob.size > maxDishImageBytes) {
+      throw new Error("This photo is still larger than 3 MB after resizing. Choose a smaller image.");
+    }
+    if (!allowedDishImageTypes.includes(blob.type)) {
+      throw new Error("This browser could not convert the photo to a supported image format.");
+    }
+    return blob;
+  } finally {
+    bitmap.close();
+  }
+}
+
+function blobToDataUrl(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.addEventListener("load", () => resolve(reader.result));
+    reader.addEventListener("error", () => reject(new Error("Could not read the resized photo.")));
+    reader.readAsDataURL(blob);
+  });
+}
+
+function makeDishCard(dish) {
+  const card = document.createElement("article");
+  card.className = "dish-card";
+
+  const image = document.createElement("img");
+  image.className = "dish-card-image";
+  image.src = dish.imageUrl;
+  image.alt = dish.title;
+  image.loading = "lazy";
+  card.appendChild(image);
+
+  const details = document.createElement("div");
+  details.className = "dish-card-details";
+  const title = document.createElement("h3");
+  title.textContent = dish.title;
+  details.appendChild(title);
+
+  if (dish.caption) {
+    const caption = document.createElement("p");
+    caption.className = "dish-card-caption";
+    caption.textContent = dish.caption;
+    details.appendChild(caption);
+  }
+
+  const date = document.createElement("time");
+  date.className = "dish-card-date";
+  date.dateTime = dish.createdAt;
+  date.textContent = new Date(dish.createdAt).toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+  details.appendChild(date);
+  card.appendChild(details);
+  return card;
+}
+
+async function loadDishGallery() {
+  const requestId = ++dishGalleryRequest;
+  try {
+    const response = await fetch("/api/dishes");
+    const dishes = await response.json();
+    if (!response.ok) throw new Error(dishes.error || "Could not load the dish gallery.");
+    if (!Array.isArray(dishes)) throw new Error("The dish gallery response was invalid.");
+
+    if (requestId !== dishGalleryRequest) return false;
+    dishGalleryGrid.replaceChildren(...dishes.map(makeDishCard));
+    dishGalleryEmpty.hidden = dishes.length > 0;
+    return true;
+  } catch {
+    if (requestId !== dishGalleryRequest) return false;
+    dishGalleryGrid.replaceChildren();
+    dishGalleryEmpty.hidden = true;
+    dishUploadStatus.textContent = "The dish gallery could not be loaded. Please try again later.";
+    return false;
+  }
+}
+
+dishUploadForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const file = dishImageInput.files[0];
+  if (!file) {
+    dishUploadStatus.textContent = "Choose a photo to share.";
+    return;
+  }
+
+  dishUploadSubmit.disabled = true;
+  dishUploadStatus.textContent = "Preparing your photo…";
+  try {
+    const image = await blobToDataUrl(await resizeDishImage(file));
+    const response = await fetch("/api/dishes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: dishTitleInput.value.trim(),
+        caption: dishCaptionInput.value.trim(),
+        image,
+      }),
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || "Your photo could not be uploaded.");
+
+    dishUploadForm.reset();
+    const galleryLoaded = await loadDishGallery();
+    dishUploadStatus.textContent = galleryLoaded
+      ? "Your dish photo has been added to the gallery."
+      : "Your photo was saved, but the gallery could not be refreshed.";
+  } catch (error) {
+    dishUploadStatus.textContent = error instanceof Error
+      ? error.message
+      : "Your photo could not be uploaded. Please try again.";
+  } finally {
+    dishUploadSubmit.disabled = false;
+  }
+});
+
 likeForm.addEventListener("submit", (event) => {
   event.preventDefault();
 
@@ -180,3 +349,4 @@ chatForm.addEventListener("submit", async (event) => {
 
 updatePromptSettings();
 loadSystemPrompt();
+loadDishGallery();

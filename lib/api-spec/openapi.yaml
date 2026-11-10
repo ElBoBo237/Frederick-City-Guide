@@ -12,7 +12,85 @@ tags:
     description: Health operations
   - name: chat
     description: AI city guide chat
+  - name: dishes
+    description: Visitor-submitted dish photos
 paths:
+  /dishes:
+    get:
+      operationId: listDishPhotos
+      tags: [dishes]
+      summary: List dish photos newest first
+      responses:
+        "200":
+          description: Dish photos without their image data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DishPhoto"
+    post:
+      operationId: createDishPhoto
+      tags: [dishes]
+      summary: Upload a dish photo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDishPhotoInput"
+      responses:
+        "201":
+          description: The saved dish photo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DishPhoto"
+        "400":
+          description: The title or image is invalid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "413":
+          description: The JSON request body exceeds 5 MB
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+  /dishes/{id}/image:
+    get:
+      operationId: getDishPhotoImage
+      tags: [dishes]
+      summary: Get the image bytes for a dish photo
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: The dish photo image
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+            image/png:
+              schema:
+                type: string
+                format: binary
+            image/webp:
+              schema:
+                type: string
+                format: binary
+        "404":
+          description: Dish photo not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
   /healthz:
     get:
       operationId: healthCheck
@@ -76,6 +154,46 @@ paths:
                 $ref: "#/components/schemas/ApiError"
 components:
   schemas:
+    CreateDishPhotoInput:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 120
+        caption:
+          type: string
+          maxLength: 500
+        image:
+          type: string
+          description: Base64 data URL for a JPEG, PNG, or WebP image up to 3 MB
+      required:
+        - title
+        - image
+    DishPhoto:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        caption:
+          type: string
+        mimeType:
+          type: string
+          enum: [image/jpeg, image/png, image/webp]
+        createdAt:
+          type: string
+          format: date-time
+        imageUrl:
+          type: string
+      required:
+        - id
+        - title
+        - caption
+        - mimeType
+        - createdAt
+        - imageUrl
     HealthStatus:
       type: object
       properties:
@@ -189,4 +307,3 @@ components:
           type: string
       required:
         - error
-

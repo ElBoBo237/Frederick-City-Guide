@@ -14,5 +14,8 @@ export * from './chatSettingsInput';
 export * from './cityChatInput';
 export * from './cityChatResponse';
 export * from './cityChatUsage';
+export * from './createDishPhotoInput';
+export * from './dishPhoto';
+export * from './dishPhotoMimeType';
 export * from './healthStatus';
 export * from './systemPromptResponse';

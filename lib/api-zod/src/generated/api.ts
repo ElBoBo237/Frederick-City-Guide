@@ -9,6 +9,55 @@ import * as zod from 'zod';
 
 
 /**
+ * @summary List dish photos newest first
+ */
+export const ListDishPhotosResponseItem = zod.object({
+  "id": zod.number().int(),
+  "title": zod.string(),
+  "caption": zod.string(),
+  "mimeType": zod.enum(['image/jpeg', 'image/png', 'image/webp']),
+  "createdAt": zod.coerce.date(),
+  "imageUrl": zod.string()
+})
+export const ListDishPhotosResponse = zod.array(ListDishPhotosResponseItem)
+
+
+/**
+ * @summary Upload a dish photo
+ */
+export const createDishPhotoBodyTitleMax = 120;
+
+export const createDishPhotoBodyCaptionMax = 500;
+
+
+
+export const CreateDishPhotoBody = zod.object({
+  "title": zod.string().min(1).max(createDishPhotoBodyTitleMax),
+  "caption": zod.string().max(createDishPhotoBodyCaptionMax).optional(),
+  "image": zod.string().describe('Base64 data URL for a JPEG, PNG, or WebP image up to 3 MB')
+})
+
+export const CreateDishPhotoResponse = zod.object({
+  "id": zod.number().int(),
+  "title": zod.string(),
+  "caption": zod.string(),
+  "mimeType": zod.enum(['image/jpeg', 'image/png', 'image/webp']),
+  "createdAt": zod.coerce.date(),
+  "imageUrl": zod.string()
+})
+
+
+/**
+ * @summary Get the image bytes for a dish photo
+ */
+export const GetDishPhotoImageParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const GetDishPhotoImageResponse = zod.unknown()
+
+
+/**
  * Returns server health status
  * @summary Health check
  */

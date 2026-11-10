@@ -23,6 +23,7 @@
         </a>
         <nav class="section-nav" aria-label="Guide sections">
           <a href="#food-title">Food</a>
+          <a href="#dishes-title">Dish gallery</a>
           <a href="#facts-title">Quick facts</a>
           <a href="#leader-title">Leader</a>
           <a href="#bird-title">State bird</a>
@@ -68,9 +69,42 @@
           </div>
         </section>
 
+        <section class="section" aria-labelledby="dishes-title">
+          <div class="section-heading">
+            <p class="section-kicker">02 / From your table</p>
+            <h2 id="dishes-title">Dish gallery</h2>
+          </div>
+          <div class="section-body">
+            <div class="dish-gallery-panel">
+              <p class="dish-gallery-intro">Share a favorite local dish and see what Frederick is enjoying. Photos are resized in your browser before upload.</p>
+              <form class="dish-upload-form" id="dish-upload-form">
+                <div class="dish-upload-fields">
+                  <div class="dish-upload-field">
+                    <label for="dish-title">Dish name</label>
+                    <input id="dish-title" name="title" type="text" maxlength="120" placeholder="Maryland crab cake" required>
+                  </div>
+                  <div class="dish-upload-field">
+                    <label for="dish-caption">Caption <span>(optional)</span></label>
+                    <input id="dish-caption" name="caption" type="text" maxlength="500" placeholder="Where you found it, or what makes it special">
+                  </div>
+                  <div class="dish-upload-field dish-image-field">
+                    <label for="dish-image">Photo</label>
+                    <input id="dish-image" name="image" type="file" accept="image/jpeg,image/png,image/webp" required>
+                    <small>JPEG, PNG, or WebP; up to 3 MB. GIFs are not supported.</small>
+                  </div>
+                </div>
+                <button id="dish-upload-submit" type="submit">Share your dish</button>
+              </form>
+              <p class="dish-upload-status" id="dish-upload-status" role="status" aria-live="polite"></p>
+              <p class="dish-gallery-empty" id="dish-gallery-empty">No photos yet. Be the first to share a favorite.</p>
+              <div class="dish-gallery-grid" id="dish-gallery-grid" aria-live="polite"></div>
+            </div>
+          </div>
+        </section>
+
         <section class="section" aria-labelledby="facts-title">
           <div class="section-heading">
-            <p class="section-kicker">02 / The short version</p>
+            <p class="section-kicker">03 / The short version</p>
             <h2 id="facts-title">Quick facts</h2>
           </div>
           <div class="section-body">
@@ -97,7 +131,7 @@
 
         <section class="section" aria-labelledby="leader-title">
           <div class="section-heading">
-            <p class="section-kicker">03 / State leadership</p>
+            <p class="section-kicker">04 / State leadership</p>
             <h2 id="leader-title">Leader</h2>
           </div>
           <div class="section-body">
@@ -113,7 +147,7 @@
 
         <section class="section" aria-labelledby="bird-title">
           <div class="section-heading">
-            <p class="section-kicker">04 / Listen for a song</p>
+            <p class="section-kicker">05 / Listen for a song</p>
             <h2 id="bird-title">State bird</h2>
           </div>
           <div class="section-body bird-layout">
@@ -130,7 +164,7 @@
 
         <section class="section" aria-labelledby="likes-title">
           <div class="section-heading">
-            <p class="section-kicker">05 / Your field notes</p>
+            <p class="section-kicker">06 / Your field notes</p>
             <h2 id="likes-title">Things I like</h2>
           </div>
           <div class="section-body">
@@ -149,7 +183,7 @@
 
         <section class="section" aria-labelledby="prompt-lab-title">
           <div class="section-heading">
-            <p class="section-kicker">06 / Ask a local</p>
+            <p class="section-kicker">07 / Ask a local</p>
             <h2 id="prompt-lab-title">Prompt Lab</h2>
           </div>
           <div class="section-body prompt-lab">

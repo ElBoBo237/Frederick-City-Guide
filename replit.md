@@ -10,6 +10,7 @@ _Replace the heading above with the project's name, and this line with one sente
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
 - Required env: `DATABASE_URL` — Postgres connection string
+- Run the database push command after adding the dish photo table so the gallery can save uploads.
 
 ## Stack
 
@@ -22,15 +23,19 @@ _Replace the heading above with the project's name, and this line with one sente
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/frederick-guide/` — static guide page, styling, and browser behavior
+- `artifacts/api-server/` — Express API, including dish-photo routes
+- `lib/db/src/schema/` — Drizzle/PostgreSQL table definitions
+- `lib/api-spec/openapi.yaml` — API contract
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- Dish photos are stored as base64 text in PostgreSQL for this demo; the API serves the image bytes separately from gallery metadata.
+- The browser resizes photos to at most 1280px before sending them to the API.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+A local field guide to Frederick, Maryland, with city information, an AI guide, and a persistent gallery where visitors can share dish photos.
 
 ## User preferences
 
