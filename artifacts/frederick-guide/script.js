@@ -101,6 +101,13 @@ function makeDishCard(dish) {
     details.appendChild(caption);
   }
 
+  if (dish.inspectorNote) {
+    const inspectorNote = document.createElement("p");
+    inspectorNote.className = "dish-card-inspector";
+    inspectorNote.textContent = dish.inspectorNote;
+    details.appendChild(inspectorNote);
+  }
+
   const date = document.createElement("time");
   date.className = "dish-card-date";
   date.dateTime = dish.createdAt;
@@ -157,7 +164,10 @@ dishUploadForm.addEventListener("submit", async (event) => {
       }),
     });
     const result = await response.json();
-    if (!response.ok) throw new Error(result.error || "Your photo could not be uploaded.");
+    if (!response.ok) {
+      const message = [result.error, result.reason].filter(Boolean).join(" ");
+      throw new Error(message || "Your photo could not be uploaded.");
+    }
 
     dishUploadForm.reset();
     const galleryLoaded = await loadDishGallery();

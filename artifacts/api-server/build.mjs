@@ -30,6 +30,8 @@ async function buildAll() {
     external: [
       "*.node",
       "sharp",
+      "@langchain/*",
+      "zod",
       "better-sqlite3",
       "sqlite3",
       "canvas",

@@ -1,6 +1,12 @@
 import { db, dishPhotosTable } from "@workspace/db";
 import { desc, eq } from "drizzle-orm";
 import { Router, type IRouter } from "express";
+import {
+  type DishInspection,
+  FEATURED_DISH,
+  INSPECTOR_CONFIDENCE_THRESHOLD,
+  inspectDishImage,
+} from "../agents/dishInspector";
 
 const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
@@ -9,15 +15,24 @@ type ImageMimeType = (typeof IMAGE_TYPES)[number];
 const router: IRouter = Router();
 
 function isImageMimeType(value: string): value is ImageMimeType {
-  return value === "image/jpeg" || value === "image/png" || value === "image/webp";
+  return (
+    value === "image/jpeg" || value === "image/png" || value === "image/webp"
+  );
 }
 
 function hasExpectedSignature(bytes: Buffer, mimeType: ImageMimeType): boolean {
   if (mimeType === "image/jpeg") {
-    return bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+    return (
+      bytes.length >= 3 &&
+      bytes[0] === 0xff &&
+      bytes[1] === 0xd8 &&
+      bytes[2] === 0xff
+    );
   }
   if (mimeType === "image/png") {
-    return bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
+    return bytes
+      .subarray(0, 8)
+      .equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
   }
   return (
     bytes.length >= 12 &&
@@ -26,14 +41,17 @@ function hasExpectedSignature(bytes: Buffer, mimeType: ImageMimeType): boolean {
   );
 }
 
-function parseImageDataUrl(value: unknown):
-  | { bytes: Buffer; mimeType: ImageMimeType }
-  | { error: string } {
+function parseImageDataUrl(
+  value: unknown,
+): { bytes: Buffer; mimeType: ImageMimeType } | { error: string } {
   if (typeof value !== "string") {
     return { error: "Choose a JPEG, PNG, or WebP image to upload." };
   }
 
-  const match = /^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/]+={0,2})$/.exec(value);
+  const match =
+    /^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/]+={0,2})$/.exec(
+      value,
+    );
   if (!match) {
     return { error: "Choose a valid JPEG, PNG, or WebP image." };
   }
@@ -48,7 +66,9 @@ function parseImageDataUrl(value: unknown):
     return { error: "The image data is invalid." };
   }
 
-  const decodedSize = (encoded.length / 4) * 3 - (encoded.endsWith("==") ? 2 : encoded.endsWith("=") ? 1 : 0);
+  const decodedSize =
+    (encoded.length / 4) * 3 -
+    (encoded.endsWith("==") ? 2 : encoded.endsWith("=") ? 1 : 0);
   if (decodedSize > MAX_IMAGE_BYTES) {
     return { error: "Images must be 3 MB or smaller." };
   }
@@ -59,7 +79,9 @@ function parseImageDataUrl(value: unknown):
     bytes.length !== decodedSize ||
     !hasExpectedSignature(bytes, mimeType)
   ) {
-    return { error: "The uploaded file is not a valid image of the selected type." };
+    return {
+      error: "The uploaded file is not a valid image of the selected type.",
+    };
   }
 
   return { bytes, mimeType };
@@ -71,6 +93,7 @@ function publicDishPhoto(dish: {
   caption: string;
   mimeType: string;
   createdAt: Date;
+  inspectorNote: string | null;
 }) {
   return {
     id: dish.id,
@@ -78,6 +101,7 @@ function publicDishPhoto(dish: {
     caption: dish.caption,
     mimeType: dish.mimeType,
     createdAt: dish.createdAt,
+    inspectorNote: dish.inspectorNote,
     imageUrl: `/api/dishes/${dish.id}/image`,
   };
 }
@@ -90,6 +114,7 @@ router.get("/dishes", async (_req, res): Promise<void> => {
       caption: dishPhotosTable.caption,
       mimeType: dishPhotosTable.mimeType,
       createdAt: dishPhotosTable.createdAt,
+      inspectorNote: dishPhotosTable.inspectorNote,
     })
     .from(dishPhotosTable)
     .orderBy(desc(dishPhotosTable.createdAt), desc(dishPhotosTable.id));
@@ -104,7 +129,9 @@ router.post("/dishes", async (req, res): Promise<void> => {
     return;
   }
   if (title.trim().length > 120) {
-    res.status(400).json({ error: "Dish titles must be 120 characters or fewer." });
+    res
+      .status(400)
+      .json({ error: "Dish titles must be 120 characters or fewer." });
     return;
   }
   if (caption !== undefined && typeof caption !== "string") {
@@ -112,7 +139,9 @@ router.post("/dishes", async (req, res): Promise<void> => {
     return;
   }
   if (typeof caption === "string" && caption.length > 500) {
-    res.status(400).json({ error: "Captions must be 500 characters or fewer." });
+    res
+      .status(400)
+      .json({ error: "Captions must be 500 characters or fewer." });
     return;
   }
 
@@ -122,6 +151,36 @@ router.post("/dishes", async (req, res): Promise<void> => {
     return;
   }
 
+  let inspection: DishInspection;
+  try {
+    inspection = await inspectDishImage(
+      parsedImage.bytes,
+      parsedImage.mimeType,
+    );
+  } catch (error) {
+    req.log.error(
+      { errorName: error instanceof Error ? error.name : "UnknownError" },
+      "Dish photo inspection failed",
+    );
+    res.status(502).json({
+      error:
+        "We couldn't check your photo right now. Please try again in a moment.",
+    });
+    return;
+  }
+
+  if (
+    !inspection.isMatch ||
+    inspection.confidence < INSPECTOR_CONFIDENCE_THRESHOLD
+  ) {
+    res.status(422).json({
+      error: `Only ${FEATURED_DISH} photos can be uploaded!`,
+      reason: `The inspector saw: ${inspection.whatISee}`,
+    });
+    return;
+  }
+
+  const inspectorNote = `Inspector: looks like ${inspection.whatISee} (${Math.round(inspection.confidence * 100)}% sure)`;
   const [dish] = await db
     .insert(dishPhotosTable)
     .values({
@@ -129,6 +188,7 @@ router.post("/dishes", async (req, res): Promise<void> => {
       caption: typeof caption === "string" ? caption.trim() : "",
       mimeType: parsedImage.mimeType,
       imageBase64: parsedImage.bytes.toString("base64"),
+      inspectorNote,
     })
     .returning({
       id: dishPhotosTable.id,
@@ -136,10 +196,13 @@ router.post("/dishes", async (req, res): Promise<void> => {
       caption: dishPhotosTable.caption,
       mimeType: dishPhotosTable.mimeType,
       createdAt: dishPhotosTable.createdAt,
+      inspectorNote: dishPhotosTable.inspectorNote,
     });
 
   if (!dish) {
-    throw new Error("The inserted dish photo was not returned by the database.");
+    throw new Error(
+      "The inserted dish photo was not returned by the database.",
+    );
   }
 
   res.status(201).json(publicDishPhoto(dish));

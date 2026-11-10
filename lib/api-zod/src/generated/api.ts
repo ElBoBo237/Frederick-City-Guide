@@ -16,6 +16,7 @@ export const ListDishPhotosResponseItem = zod.object({
   "title": zod.string(),
   "caption": zod.string(),
   "mimeType": zod.enum(['image/jpeg', 'image/png', 'image/webp']),
+  "inspectorNote": zod.string().nullable(),
   "createdAt": zod.coerce.date(),
   "imageUrl": zod.string()
 })
@@ -42,6 +43,7 @@ export const CreateDishPhotoResponse = zod.object({
   "title": zod.string(),
   "caption": zod.string(),
   "mimeType": zod.enum(['image/jpeg', 'image/png', 'image/webp']),
+  "inspectorNote": zod.string().nullable(),
   "createdAt": zod.coerce.date(),
   "imageUrl": zod.string()
 })

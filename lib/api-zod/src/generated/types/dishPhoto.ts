@@ -12,6 +12,8 @@ export interface DishPhoto {
   title: string;
   caption: string;
   mimeType: DishPhotoMimeType;
+  /** @nullable */
+  inspectorNote: string | null;
   createdAt: Date;
   imageUrl: string;
 }

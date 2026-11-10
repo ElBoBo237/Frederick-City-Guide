@@ -58,6 +58,18 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiError"
+        "422":
+          description: The image does not show the featured dish
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "502":
+          description: The image inspector could not complete the request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
   /dishes/{id}/image:
     get:
       operationId: getDishPhotoImage
@@ -182,6 +194,8 @@ components:
         mimeType:
           type: string
           enum: [image/jpeg, image/png, image/webp]
+        inspectorNote:
+          type: ["string", "null"]
         createdAt:
           type: string
           format: date-time
@@ -192,6 +206,7 @@ components:
         - title
         - caption
         - mimeType
+        - inspectorNote
         - createdAt
         - imageUrl
     HealthStatus:
@@ -304,6 +319,8 @@ components:
       type: object
       properties:
         error:
+          type: string
+        reason:
           type: string
       required:
         - error

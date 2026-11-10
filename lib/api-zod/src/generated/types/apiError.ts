@@ -8,4 +8,5 @@
 
 export interface ApiError {
   error: string;
+  reason?: string;
 }
