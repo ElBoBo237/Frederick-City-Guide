@@ -16,6 +16,47 @@ const maxDishImageBytes = 3 * 1024 * 1024;
 const allowedDishImageTypes = ["image/jpeg", "image/png", "image/webp"];
 let dishGalleryRequest = 0;
 
+function getApiOrigin() {
+  const { hostname, origin, port, protocol } = window.location;
+  if (
+    protocol !== "http:" ||
+    !["localhost", "127.0.0.1", "::1"].includes(hostname) ||
+    port === "8080"
+  ) {
+    return "";
+  }
+
+  const apiOrigin = new URL(origin);
+  apiOrigin.port = "8080";
+  return apiOrigin.origin;
+}
+
+const apiOrigin = getApiOrigin();
+
+async function fetchApi(path, options) {
+  try {
+    return await fetch(`${apiOrigin}${path}`, options);
+  } catch (error) {
+    throw new Error(
+      "Couldn't connect to the API. Start the API server with DATABASE_URL configured, then try again.",
+    );
+  }
+}
+
+async function readApiJson(response) {
+  if (!response.headers.get("content-type")?.includes("application/json")) {
+    throw new Error(
+      `The API returned ${response.status} without JSON. Start the project with its API service, or run the API server with DATABASE_URL configured.`,
+    );
+  }
+
+  try {
+    return await response.json();
+  } catch (error) {
+    throw new Error("The API returned invalid JSON. Please try again or check the API server logs.");
+  }
+}
+
 function canvasToBlob(canvas, mimeType, quality) {
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => {
@@ -83,7 +124,7 @@ function makeDishCard(dish) {
 
   const image = document.createElement("img");
   image.className = "dish-card-image";
-  image.src = dish.imageUrl;
+  image.src = `${apiOrigin}${dish.imageUrl}`;
   image.alt = dish.title;
   image.loading = "lazy";
   card.appendChild(image);
@@ -124,8 +165,8 @@ function makeDishCard(dish) {
 async function loadDishGallery() {
   const requestId = ++dishGalleryRequest;
   try {
-    const response = await fetch("/api/dishes");
-    const dishes = await response.json();
+    const response = await fetchApi("/api/dishes");
+    const dishes = await readApiJson(response);
     if (!response.ok) throw new Error(dishes.error || "Could not load the dish gallery.");
     if (!Array.isArray(dishes)) throw new Error("The dish gallery response was invalid.");
 
@@ -133,11 +174,13 @@ async function loadDishGallery() {
     dishGalleryGrid.replaceChildren(...dishes.map(makeDishCard));
     dishGalleryEmpty.hidden = dishes.length > 0;
     return true;
-  } catch {
+  } catch (error) {
     if (requestId !== dishGalleryRequest) return false;
     dishGalleryGrid.replaceChildren();
     dishGalleryEmpty.hidden = true;
-    dishUploadStatus.textContent = "The dish gallery could not be loaded. Please try again later.";
+    dishUploadStatus.textContent = error instanceof Error
+      ? error.message
+      : "The dish gallery could not be loaded. Please try again later.";
     return false;
   }
 }
@@ -154,7 +197,7 @@ dishUploadForm.addEventListener("submit", async (event) => {
   dishUploadStatus.textContent = "Preparing your photo…";
   try {
     const image = await blobToDataUrl(await resizeDishImage(file));
-    const response = await fetch("/api/dishes", {
+    const response = await fetchApi("/api/dishes", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -163,7 +206,7 @@ dishUploadForm.addEventListener("submit", async (event) => {
         image,
       }),
     });
-    const result = await response.json();
+    const result = await readApiJson(response);
     if (!response.ok) {
       const message = [result.error, result.reason].filter(Boolean).join(" ");
       throw new Error(message || "Your photo could not be uploaded.");
@@ -281,12 +324,14 @@ function addChatMessage({ role, text, settings, usage, model, error = false }) {
 
 async function loadSystemPrompt() {
   try {
-    const response = await fetch("/api/chat/system-prompt");
-    const data = await response.json();
+    const response = await fetchApi("/api/chat/system-prompt");
+    const data = await readApiJson(response);
     if (!response.ok) throw new Error(data.error || "Could not load the prompt.");
     systemPromptOutput.textContent = data.systemPrompt;
-  } catch {
-    systemPromptOutput.textContent = "The system prompt could not be loaded right now.";
+  } catch (error) {
+    systemPromptOutput.textContent = error instanceof Error
+      ? error.message
+      : "The system prompt could not be loaded right now.";
   }
 }
 
@@ -311,7 +356,7 @@ chatForm.addEventListener("submit", async (event) => {
   };
 
   try {
-    const response = await fetch("/api/chat", {
+    const response = await fetchApi("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -320,7 +365,7 @@ chatForm.addEventListener("submit", async (event) => {
         settings,
       }),
     });
-    const data = await response.json();
+    const data = await readApiJson(response);
     thinkingMessage.remove();
 
     if (!response.ok) {

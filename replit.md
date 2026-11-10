@@ -11,6 +11,7 @@ _Replace the heading above with the project's name, and this line with one sente
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
 - Required env: `DATABASE_URL` — Postgres connection string
 - `GEMINI_API_KEY` enables the AI city guide and the dish-photo inspector.
+- The guide's development server proxies `/api` to port 8080; when using VS Code Live Server, run the API server on port 8080 as well.
 - Run the database push command after adding the dish photo table so the gallery can save uploads.
 
 ## Stack
