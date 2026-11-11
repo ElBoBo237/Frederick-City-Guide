@@ -517,3 +517,88 @@ updatePromptSettings();
 loadSystemPrompt();
 loadDishGallery();
 loadDishInspiration();
+
+// ------------------------------------------------------------------
+// Aerial backdrop: slowly crossfade between Frederick aerial photos.
+// Without JS the first photo simply stays put.
+// ------------------------------------------------------------------
+(function setUpAerialBackdrop() {
+  const backdrop = document.querySelector("#aerial-backdrop");
+  const toggle = document.querySelector("#aerial-toggle");
+  const toggleText = toggle.querySelector(".aerial-toggle-text");
+  const caption = document.querySelector("#aerial-caption");
+  const layers = Array.from(backdrop.querySelectorAll(".aerial-layer"));
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const slideDelay = 11000; // milliseconds each photo stays in view
+  let current = 0;
+  let timer = null;
+  // Reduced-motion visitors get a still photo until they choose to resume.
+  let pausedByVisitor = reduceMotion.matches;
+
+  // Check each photo loads; hide any that fail.
+  let remaining = layers.length;
+  layers.forEach((layer) => {
+    const probe = new Image();
+    probe.onload = () => finishCheck();
+    probe.onerror = () => {
+      layer.classList.add("is-broken");
+      layer.classList.remove("is-active");
+      finishCheck();
+    };
+    probe.src = layer.dataset.src;
+  });
+
+  function workingLayers() {
+    return layers.filter((layer) => !layer.classList.contains("is-broken"));
+  }
+
+  function finishCheck() {
+    remaining -= 1;
+    if (remaining > 0) return;
+    const usable = workingLayers();
+    if (usable.length === 0) {
+      // Keep a calm gradient instead of a broken image.
+      backdrop.classList.add("aerial-failed");
+      caption.textContent = "Aerial photos unavailable";
+      return;
+    }
+    usable[0].classList.add("is-active");
+    current = layers.indexOf(usable[0]);
+    caption.textContent = usable[0].dataset.label;
+    backdrop.classList.add("aerial-ready");
+    // Only offer a pause button when there is something moving to pause.
+    if (usable.length > 1 || !reduceMotion.matches) toggle.hidden = false;
+    updateState();
+  }
+
+  function showNext() {
+    const usable = workingLayers();
+    if (usable.length < 2) return;
+    const position = usable.indexOf(layers[current]);
+    const next = usable[(position + 1) % usable.length];
+    layers[current].classList.remove("is-active");
+    next.classList.add("is-active");
+    current = layers.indexOf(next);
+    caption.textContent = next.dataset.label;
+  }
+
+  // Run the timer only when not paused and the tab is visible.
+  function updateState() {
+    const shouldRun = !pausedByVisitor && !document.hidden;
+    backdrop.classList.toggle("aerial-paused", !shouldRun);
+    window.clearInterval(timer);
+    timer = shouldRun ? window.setInterval(showNext, slideDelay) : null;
+    toggle.setAttribute("aria-pressed", String(pausedByVisitor));
+    toggleText.textContent = pausedByVisitor ? "Resume aerial view" : "Pause aerial view";
+  }
+
+  toggle.addEventListener("click", () => {
+    pausedByVisitor = !pausedByVisitor;
+    updateState();
+  });
+  document.addEventListener("visibilitychange", updateState);
+  reduceMotion.addEventListener?.("change", (event) => {
+    pausedByVisitor = event.matches;
+    updateState();
+  });
+})();

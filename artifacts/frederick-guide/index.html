@@ -11,6 +11,23 @@
     <script src="./script.js" defer></script>
   </head>
   <body>
+    <!-- Page-wide aerial backdrop. The first photo shows even without JavaScript;
+         script.js adds the slow crossfade, the pause button, and error handling. -->
+    <div class="aerial-backdrop" id="aerial-backdrop" aria-hidden="true">
+      <div class="aerial-layer is-active" data-src="./images/frederick-skyline.jpg" data-label="Clustered Spires, downtown"></div>
+      <div class="aerial-layer" data-src="./images/frederick-church-street.jpg" data-label="Church Street morning"></div>
+      <div class="aerial-veil"></div>
+    </div>
+    <div class="aerial-dock">
+      <button class="aerial-toggle" id="aerial-toggle" type="button" aria-pressed="false" hidden>
+        <span class="aerial-toggle-icon" aria-hidden="true"></span>
+        <span class="aerial-toggle-text">Pause aerial view</span>
+      </button>
+      <p class="aerial-credit">
+        <span class="aerial-caption" id="aerial-caption">Clustered Spires, downtown</span>
+        <span>Photos: Bill Adkins and <a href="https://www.visitfrederick.org/" target="_blank" rel="noopener noreferrer">Visit Frederick</a></span>
+      </p>
+    </div>
     <div class="utility-bar">
       <span>Frederick, Maryland</span>
       <span>A practical local guide</span>
