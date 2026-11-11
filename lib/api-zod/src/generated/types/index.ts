@@ -19,3 +19,5 @@ export * from './dishPhoto';
 export * from './dishPhotoMimeType';
 export * from './healthStatus';
 export * from './systemPromptResponse';
+export * from './unsplashDishPhoto';
+export * from './unsplashDownloadRequest';

@@ -2,6 +2,7 @@
 export const PART_A_SETTINGS = {
   cityName: "Frederick, Maryland",
   guideVoice: "a warm, neighborly local guide with a little Frederick charm",
+  favoriteDish: "Maryland crab cake",
 } as const;
 
 // Keep these facts in sync with the visitor guide page.

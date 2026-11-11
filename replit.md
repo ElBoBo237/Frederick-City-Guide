@@ -11,6 +11,7 @@ _Replace the heading above with the project's name, and this line with one sente
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
 - Required env: `DATABASE_URL` — Postgres connection string
 - `GEMINI_API_KEY` enables the AI city guide and the dish-photo inspector.
+- `UNSPLASH_ACCESS_KEY` enables the live food inspiration grid.
 - The guide's development server proxies `/api` to port 8080; when using VS Code Live Server, run the API server on port 8080 as well.
 - Run the database push command after adding the dish photo table so the gallery can save uploads.
 
@@ -21,6 +22,8 @@ _Replace the heading above with the project's name, and this line with one sente
 - DB: PostgreSQL + Drizzle ORM
 - Validation: Zod, `drizzle-zod`
 - Dish inspection: LangChain JS `ChatGoogle` with structured output
+- Food inspiration: Unsplash API search and server-side download-event tracking
+- Part A city, guide voice, and favorite dish settings live in `artifacts/api-server/src/city.ts`.
 - API codegen: Orval (from OpenAPI spec)
 - Build: esbuild (CJS bundle)
 
@@ -36,6 +39,7 @@ _Replace the heading above with the project's name, and this line with one sente
 - Dish photos are stored as base64 text in PostgreSQL for this demo; the API serves the image bytes separately from gallery metadata.
 - The browser resizes photos to at most 1280px before sending them to the API.
 - Dish uploads are checked for a visible Maryland crab cake before any database write; inspection decisions are enforced server-side.
+- Unsplash photo links retain direct Unsplash image URLs and include photographer attribution with source tracking.
 
 ## Product
 

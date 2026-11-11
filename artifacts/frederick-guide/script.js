@@ -12,9 +12,19 @@ const dishUploadSubmit = document.querySelector("#dish-upload-submit");
 const dishUploadStatus = document.querySelector("#dish-upload-status");
 const dishGalleryGrid = document.querySelector("#dish-gallery-grid");
 const dishGalleryEmpty = document.querySelector("#dish-gallery-empty");
+const inspirationGrid = document.querySelector("#inspiration-grid");
+const inspirationStatus = document.querySelector("#inspiration-status");
+const inspirationRefresh = document.querySelector("#inspiration-refresh");
+const inspirationDialog = document.querySelector("#inspiration-dialog");
+const inspirationDialogClose = document.querySelector("#inspiration-dialog-close");
+const inspirationDialogImage = document.querySelector("#inspiration-dialog-image");
+const inspirationDialogCredit = document.querySelector("#inspiration-dialog-credit");
+const inspirationDialogStatus = document.querySelector("#inspiration-dialog-status");
+const inspirationDialogSave = document.querySelector("#inspiration-dialog-save");
 const maxDishImageBytes = 3 * 1024 * 1024;
 const allowedDishImageTypes = ["image/jpeg", "image/png", "image/webp"];
 let dishGalleryRequest = 0;
+let inspirationRequest = 0;
 
 function getApiOrigin() {
   const { hostname, origin, port, protocol } = window.location;
@@ -162,6 +172,115 @@ function makeDishCard(dish) {
   return card;
 }
 
+async function recordUnsplashDownload(downloadLocation) {
+  const response = await fetchApi("/api/unsplash/dish-inspiration/download", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ downloadLocation }),
+  });
+  if (!response.ok) {
+    const result = await readApiJson(response);
+    throw new Error(result.error || "We couldn't record this Unsplash view.");
+  }
+}
+
+function showInspirationPhoto(photo) {
+  inspirationDialogImage.src = photo.imageUrl;
+  inspirationDialogImage.alt = photo.altText;
+  inspirationDialogCredit.replaceChildren();
+
+  const creditLabel = document.createTextNode("Photo by ");
+  const photographer = document.createElement("a");
+  photographer.href = photo.photographerProfileUrl;
+  photographer.target = "_blank";
+  photographer.rel = "noopener noreferrer";
+  photographer.textContent = photo.photographerName;
+  inspirationDialogCredit.append(creditLabel, photographer);
+
+  inspirationDialogSave.href = photo.rawUrl;
+  inspirationDialogSave.onclick = () => {
+    recordUnsplashDownload(photo.downloadLocation).catch((error) => {
+      inspirationDialogStatus.textContent = error instanceof Error
+        ? error.message
+        : "We couldn't record this Unsplash view.";
+    });
+  };
+  inspirationDialogStatus.textContent = "Recording this photo view with Unsplash…";
+  inspirationDialog.showModal();
+  recordUnsplashDownload(photo.downloadLocation)
+    .then(() => {
+      inspirationDialogStatus.textContent = "Photo view recorded.";
+    })
+    .catch((error) => {
+      inspirationDialogStatus.textContent = error instanceof Error
+        ? error.message
+        : "We couldn't record this Unsplash view.";
+    });
+}
+
+function makeInspirationCard(photo) {
+  const card = document.createElement("article");
+  card.className = "inspiration-card";
+
+  const expand = document.createElement("button");
+  expand.className = "inspiration-expand";
+  expand.type = "button";
+  expand.setAttribute("aria-label", `Expand photo by ${photo.photographerName}`);
+
+  const image = document.createElement("img");
+  image.className = "inspiration-image";
+  image.src = photo.imageUrl;
+  image.alt = photo.altText;
+  image.loading = "lazy";
+  expand.appendChild(image);
+  expand.addEventListener("click", () => showInspirationPhoto(photo));
+  card.appendChild(expand);
+
+  const credit = document.createElement("p");
+  credit.className = "inspiration-credit";
+  credit.appendChild(document.createTextNode("Photo by "));
+
+  const photographer = document.createElement("a");
+  photographer.href = photo.photographerProfileUrl;
+  photographer.target = "_blank";
+  photographer.rel = "noopener noreferrer";
+  photographer.textContent = photo.photographerName;
+  credit.appendChild(photographer);
+  card.appendChild(credit);
+
+  return card;
+}
+
+async function loadDishInspiration() {
+  const requestId = ++inspirationRequest;
+  inspirationRefresh.disabled = true;
+  inspirationStatus.textContent = "Loading food inspiration…";
+
+  try {
+    const response = await fetchApi("/api/unsplash/dish-inspiration");
+    const photos = await readApiJson(response);
+    if (!response.ok) {
+      throw new Error(photos.error || "Food inspiration could not be loaded.");
+    }
+    if (!Array.isArray(photos)) {
+      throw new Error("The food inspiration response was invalid.");
+    }
+
+    if (requestId !== inspirationRequest) return;
+    inspirationGrid.replaceChildren(...photos.slice(0, 6).map(makeInspirationCard));
+    inspirationStatus.textContent = photos.length
+      ? `Showing ${Math.min(photos.length, 6)} Unsplash photos.`
+      : "No inspiration photos were found. Try refreshing.";
+  } catch (error) {
+    if (requestId !== inspirationRequest) return;
+    inspirationStatus.textContent = error instanceof Error
+      ? error.message
+      : "Food inspiration could not be loaded. Please try again.";
+  } finally {
+    if (requestId === inspirationRequest) inspirationRefresh.disabled = false;
+  }
+}
+
 async function loadDishGallery() {
   const requestId = ++dishGalleryRequest;
   try {
@@ -224,6 +343,12 @@ dishUploadForm.addEventListener("submit", async (event) => {
   } finally {
     dishUploadSubmit.disabled = false;
   }
+});
+
+inspirationRefresh.addEventListener("click", loadDishInspiration);
+inspirationDialogClose.addEventListener("click", () => inspirationDialog.close());
+inspirationDialog.addEventListener("click", (event) => {
+  if (event.target === inspirationDialog) inspirationDialog.close();
 });
 
 likeForm.addEventListener("submit", (event) => {
@@ -405,3 +530,4 @@ chatForm.addEventListener("submit", async (event) => {
 updatePromptSettings();
 loadSystemPrompt();
 loadDishGallery();
+loadDishInspiration();

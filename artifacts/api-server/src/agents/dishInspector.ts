@@ -1,8 +1,9 @@
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { ChatGoogle } from "@langchain/google";
 import { z } from "zod";
+import { PART_A_SETTINGS } from "../city";
 
-export const FEATURED_DISH = "Maryland crab cake";
+export const FEATURED_DISH = PART_A_SETTINGS.favoriteDish;
 export const INSPECTOR_CONFIDENCE_THRESHOLD = 0.7;
 
 const inspectionSchema = z.object({

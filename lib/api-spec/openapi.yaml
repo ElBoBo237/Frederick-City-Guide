@@ -14,7 +14,67 @@ tags:
     description: AI city guide chat
   - name: dishes
     description: Visitor-submitted dish photos
+  - name: unsplash
+    description: Unsplash food inspiration
 paths:
+  /unsplash/dish-inspiration:
+    get:
+      operationId: getDishInspiration
+      tags: [unsplash]
+      summary: Find Unsplash photos inspired by the city's favorite dish
+      responses:
+        "200":
+          description: Up to six Unsplash photos with attribution details
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UnsplashDishPhoto"
+        "502":
+          description: Unsplash could not complete the search
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "503":
+          description: The Unsplash access key is not configured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+  /unsplash/dish-inspiration/download:
+    post:
+      operationId: trackDishInspirationDownload
+      tags: [unsplash]
+      summary: Notify Unsplash that a user expanded or saved a photo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UnsplashDownloadRequest"
+      responses:
+        "204":
+          description: Unsplash download event recorded
+        "400":
+          description: The download location is invalid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "502":
+          description: Unsplash could not record the download event
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "503":
+          description: The Unsplash access key is not configured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
   /dishes:
     get:
       operationId: listDishPhotos
@@ -166,6 +226,43 @@ paths:
                 $ref: "#/components/schemas/ApiError"
 components:
   schemas:
+    UnsplashDishPhoto:
+      type: object
+      properties:
+        id:
+          type: string
+        imageUrl:
+          type: string
+          format: uri
+        rawUrl:
+          type: string
+          format: uri
+        altText:
+          type: string
+        photographerName:
+          type: string
+        photographerProfileUrl:
+          type: string
+          format: uri
+        downloadLocation:
+          type: string
+          format: uri
+      required:
+        - id
+        - imageUrl
+        - rawUrl
+        - altText
+        - photographerName
+        - photographerProfileUrl
+        - downloadLocation
+    UnsplashDownloadRequest:
+      type: object
+      properties:
+        downloadLocation:
+          type: string
+          format: uri
+      required:
+        - downloadLocation
     CreateDishPhotoInput:
       type: object
       properties:

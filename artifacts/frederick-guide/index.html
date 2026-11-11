@@ -24,6 +24,7 @@
         <nav class="section-nav" aria-label="Guide sections">
           <a href="#food-title">Food</a>
           <a href="#dishes-title">Dish gallery</a>
+          <a href="#inspiration-title">Inspiration</a>
           <a href="#facts-title">Quick facts</a>
           <a href="#leader-title">Leader</a>
           <a href="#bird-title">State bird</a>
@@ -102,9 +103,36 @@
           </div>
         </section>
 
+        <section class="section" aria-labelledby="inspiration-title">
+          <div class="section-heading">
+            <p class="section-kicker">03 / A little inspiration</p>
+            <h2 id="inspiration-title">Inspiration Grid</h2>
+          </div>
+          <div class="section-body inspiration-panel">
+            <div class="inspiration-heading">
+              <p>Fresh Unsplash photos inspired by Frederick’s favorite dish.</p>
+              <button class="inspiration-refresh" id="inspiration-refresh" type="button">Refresh inspiration</button>
+            </div>
+            <p class="inspiration-status" id="inspiration-status" role="status" aria-live="polite">Loading food inspiration…</p>
+            <div class="inspiration-grid" id="inspiration-grid" aria-live="polite"></div>
+            <dialog class="inspiration-dialog" id="inspiration-dialog" aria-labelledby="inspiration-dialog-title">
+              <div class="inspiration-dialog-heading">
+                <h3 id="inspiration-dialog-title">Food inspiration</h3>
+                <button class="inspiration-dialog-close" id="inspiration-dialog-close" type="button" aria-label="Close photo">Close</button>
+              </div>
+              <img class="inspiration-dialog-image" id="inspiration-dialog-image" alt="">
+              <div class="inspiration-dialog-footer">
+                <p id="inspiration-dialog-credit"></p>
+                <p class="inspiration-dialog-status" id="inspiration-dialog-status" role="status" aria-live="polite"></p>
+                <a id="inspiration-dialog-save" href="#" target="_blank" rel="noopener noreferrer">Open original photo</a>
+              </div>
+            </dialog>
+          </div>
+        </section>
+
         <section class="section" aria-labelledby="facts-title">
           <div class="section-heading">
-            <p class="section-kicker">03 / The short version</p>
+            <p class="section-kicker">04 / The short version</p>
             <h2 id="facts-title">Quick facts</h2>
           </div>
           <div class="section-body">
@@ -131,7 +159,7 @@
 
         <section class="section" aria-labelledby="leader-title">
           <div class="section-heading">
-            <p class="section-kicker">04 / State leadership</p>
+            <p class="section-kicker">05 / State leadership</p>
             <h2 id="leader-title">Leader</h2>
           </div>
           <div class="section-body">
@@ -147,7 +175,7 @@
 
         <section class="section" aria-labelledby="bird-title">
           <div class="section-heading">
-            <p class="section-kicker">05 / Listen for a song</p>
+            <p class="section-kicker">06 / Listen for a song</p>
             <h2 id="bird-title">State bird</h2>
           </div>
           <div class="section-body bird-layout">
@@ -164,7 +192,7 @@
 
         <section class="section" aria-labelledby="likes-title">
           <div class="section-heading">
-            <p class="section-kicker">06 / Your field notes</p>
+            <p class="section-kicker">07 / Your field notes</p>
             <h2 id="likes-title">Things I like</h2>
           </div>
           <div class="section-body">
@@ -183,7 +211,7 @@
 
         <section class="section" aria-labelledby="prompt-lab-title">
           <div class="section-heading">
-            <p class="section-kicker">07 / Ask a local</p>
+            <p class="section-kicker">08 / Ask a local</p>
             <h2 id="prompt-lab-title">Prompt Lab</h2>
           </div>
           <div class="section-body prompt-lab">
