@@ -36,13 +36,14 @@ router.get("/unsplash/dish-inspiration", async (req, res): Promise<void> => {
   searchUrl.searchParams.set("per_page", "6");
 
   try {
-    const response = await fetch(searchUrl, {
+    const options = {
       headers: {
         Authorization: `Client-ID ${accessKey}`,
         "Accept-Version": "v1",
       },
       signal: AbortSignal.timeout(10_000),
-    });
+    };
+    let response = await fetch(searchUrl, options);
     if (!response.ok) {
       req.log.warn(
         { statusCode: response.status },
@@ -55,7 +56,17 @@ router.get("/unsplash/dish-inspiration", async (req, res): Promise<void> => {
       return;
     }
 
-    const payload: unknown = await response.json();
+    let payload: unknown = await response.json();
+    // Exact city/dish searches can be empty. Show related seafood inspiration
+    // rather than implying these stock photos were taken in Frederick.
+    if (typeof payload === "object" && payload !== null &&
+        "results" in payload && Array.isArray(payload.results) &&
+        payload.results.length === 0) {
+      searchUrl.searchParams.set("query", "seafood");
+      response = await fetch(searchUrl, { ...options, signal: AbortSignal.timeout(10_000) });
+      if (!response.ok) throw new Error("Related inspiration search failed.");
+      payload = await response.json();
+    }
     if (
       typeof payload !== "object" ||
       payload === null ||

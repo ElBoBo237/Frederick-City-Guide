@@ -26,29 +26,15 @@ const allowedDishImageTypes = ["image/jpeg", "image/png", "image/webp"];
 let dishGalleryRequest = 0;
 let inspirationRequest = 0;
 
-function getApiOrigin() {
-  const { hostname, origin, port, protocol } = window.location;
-  if (
-    protocol !== "http:" ||
-    !["localhost", "127.0.0.1", "::1"].includes(hostname) ||
-    port === "8080"
-  ) {
-    return "";
-  }
-
-  const apiOrigin = new URL(origin);
-  apiOrigin.port = "8080";
-  return apiOrigin.origin;
-}
-
-const apiOrigin = getApiOrigin();
+// Both preview and published pages reach the API through the shared proxy.
+const apiOrigin = "";
 
 async function fetchApi(path, options) {
   try {
     return await fetch(`${apiOrigin}${path}`, options);
   } catch (error) {
     throw new Error(
-      "Couldn't connect to the API. Start the API server with DATABASE_URL configured, then try again.",
+      "Couldn't connect to the photo service. Please try again in a moment.",
     );
   }
 }
@@ -56,7 +42,7 @@ async function fetchApi(path, options) {
 async function readApiJson(response) {
   if (!response.headers.get("content-type")?.includes("application/json")) {
     throw new Error(
-      `The API returned ${response.status} without JSON. Start the project with its API service, or run the API server with DATABASE_URL configured.`,
+      `The photo service is unavailable (HTTP ${response.status}). Please try again in a moment.`,
     );
   }
 
